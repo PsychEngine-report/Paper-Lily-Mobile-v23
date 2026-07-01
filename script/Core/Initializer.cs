@@ -65,14 +65,17 @@ namespace LacieEngine.Core
 		{
 			await GDUtil.DelayOneFrame();
 			await Game.Screen.ShowLoadingScreenInstantly();
-			Task task = Task.Run(delegate
-			{
-				LoadingProc();
-			});
-			while (!task.IsCompleted)
-			{
-				await GDUtil.DelayOneFrame();
-			}
+			
+			try
+            {
+              LoadingProc();
+            }
+            catch (Exception exception)
+            {
+              Log.Exception(exception, "An error occurred during game initialization.");
+            }
+    
+            await GDUtil.DelayOneFrame(); 
 			await Game.Screen.HideLoadingScreen();
 			Log.Info(Game.Settings.ProductName, " ", Game.Settings.ProductVersion, ", Game start!");
 			if (Game.Language.GetAvailableLanguages().Count > 1 && Game.Settings.TranslationSelected.IsNullOrEmpty())
