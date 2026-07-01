@@ -81,53 +81,90 @@ namespace LacieEngine.Core
 		public static InputProfile DebugKeys;
 
 		public static void Init()
-		{
-			foreach (string action in InputMap.GetActions())
-			{
-				if (!action.StartsWith("ui_"))
-				{
-					InputMap.EraseAction(action);
-				}
-			}
-			string[] allKeys = AllKeys;
-			for (int i = 0; i < allKeys.Length; i++)
-			{
-				InputMap.AddAction(allKeys[i]);
-			}
-			Profiles = new Dictionary<string, InputProfile>();
-			foreach (string filename in GDUtil.ListFilesInPath("res://definitions/inputprofile/", null, ".json", fullPath: false))
-			{
-				string name = filename.Substring(0, filename.LastIndexOf(".json"));
-				InputProfileDTO dto = GDUtil.ReadJsonFile<InputProfileDTO>("res://definitions/inputprofile/" + filename);
-				Profiles[name] = dto.ToInputProfile();
-				Profiles[name].Name = name;
-			}
-			if (GDUtil.FileExists("user://bindings.json"))
-			{
-				try
-				{
-					InputProfileDTO dto2 = GDUtil.ReadJsonFile<InputProfileDTO>("user://bindings.json");
-					Profiles["custom"] = dto2.ToInputProfile();
-					Profiles["custom"].Name = "custom";
-				}
-				catch
-				{
-					Log.Error("Failed to load custom input profile. Is the bindings file corrupted?");
-				}
-			}
-			SystemKeys = new InputProfile(InputProfile.InputType.Keyboard);
-			SystemKeys.AddKeyMapping("system_mute_audio", 16777253u);
-			SystemKeys.AddKeyMapping("system_full_screen", 16777254u);
-			SystemKeys.AddKeyMapping("system_screenshot", 16777255u);
-			DebugKeys = new InputProfile(InputProfile.InputType.Keyboard);
-			DebugKeys.AddKeyMapping("debug_logger", 16777244u);
-			DebugKeys.AddKeyMapping("debug_fps", 16777245u);
-			DebugKeys.AddKeyMapping("debug_key", 16777244u, shift: true);
-			DebugKeys.AddKeyMapping("debug_openevent", 16777247u, shift: true);
-			DebugKeys.AddKeyMapping("debug_console", 96u);
-			DebugKeys.AddKeyMapping("debug_save", 16777248u, shift: true);
-			DebugKeys.AddKeyMapping("debug_load", 16777249u, shift: true);
-		}
+        {
+    foreach (string action in InputMap.GetActions())
+    {
+        if (!action.StartsWith("ui_"))
+        {
+            InputMap.EraseAction(action);
+        }
+    }
+    string[] allKeys = AllKeys;
+    for (int i = 0; i < allKeys.Length; i++)
+    {
+        InputMap.AddAction(allKeys[i]);
+    }
+    
+    Profiles = new Dictionary<string, InputProfile>();
+
+    Godot.Directory dir = new Godot.Directory();
+    string path = "res://definitions/inputprofile/";
+
+    if (dir.Open(path) == Godot.Error.Ok)
+    {
+        dir.ListDirBegin(skipNavigational: true);
+        string filename = dir.GetNext();
+
+        while (filename != "")
+        {
+            if (!dir.CurrentIsDir())
+            {
+                if (filename.EndsWith(".json") || filename.EndsWith(".json.remap"))
+                {
+                    try 
+                    {
+                        string name = filename.Replace(".json.remap", "").Replace(".json", "");
+                        
+                        InputProfileDTO dto = GDUtil.ReadJsonFile<InputProfileDTO>(path + filename);
+                        
+                        if (dto != null)
+                        {
+                            Profiles[name] = dto.ToInputProfile();
+                            Profiles[name].Name = name;
+                        }
+                    }
+                    catch (System.Exception e)
+                    {
+                        Godot.GD.Print($"Error parsing profile {filename}: {e.Message}");
+                    }
+                }
+            }
+            filename = dir.GetNext();
+        }
+        dir.ListDirEnd();
+    }
+    else
+    {
+        Godot.GD.PrintErr($"Failed to open directory: {path}");
+    }
+
+    if (GDUtil.FileExists("user://bindings.json"))
+    {
+        try
+        {
+            InputProfileDTO dto2 = GDUtil.ReadJsonFile<InputProfileDTO>("user://bindings.json");
+            Profiles["custom"] = dto2.ToInputProfile();
+            Profiles["custom"].Name = "custom";
+        }
+        catch
+        {
+            Log.Error("Failed to load custom input profile. Is the bindings file corrupted?");
+        }
+    }
+    
+    SystemKeys = new InputProfile(InputProfile.InputType.Keyboard);
+    SystemKeys.AddKeyMapping("system_mute_audio", 16777253u);
+    SystemKeys.AddKeyMapping("system_full_screen", 16777254u);
+    SystemKeys.AddKeyMapping("system_screenshot", 16777255u);
+    DebugKeys = new InputProfile(InputProfile.InputType.Keyboard);
+    DebugKeys.AddKeyMapping("debug_logger", 16777244u);
+    DebugKeys.AddKeyMapping("debug_fps", 16777245u);
+    DebugKeys.AddKeyMapping("debug_key", 16777244u, shift: true);
+    DebugKeys.AddKeyMapping("debug_openevent", 16777247u, shift: true);
+    DebugKeys.AddKeyMapping("debug_console", 96u);
+    DebugKeys.AddKeyMapping("debug_save", 16777248u, shift: true);
+    DebugKeys.AddKeyMapping("debug_load", 16777249u, shift: true);
+    }
 
 		public static string Handle(InputEvent @event, Processor processor, string[] validInputs, bool allowEcho = false)
 		{
