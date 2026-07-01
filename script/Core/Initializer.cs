@@ -72,7 +72,7 @@ namespace LacieEngine.Core
             }
             catch (Exception exception)
             {
-              Log.Exception(exception, "An error occurred during game initialization.");
+              Log.Exception(exception, $"CRITICAL INITIALIZATION FAILURE:\n{exception.ToString()}");
             }
     
             await GDUtil.DelayOneFrame(); 
