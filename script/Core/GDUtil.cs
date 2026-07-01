@@ -17,8 +17,6 @@ namespace LacieEngine.Core
 
 		private static readonly Regex vector2Regex = new Regex("\\(-?\\d+,-?\\d+\\)");
 
-		private static readonly Godot.Directory fileOpDir = new Godot.Directory();
-
 		static GDUtil()
 		{
 			serializerSettings.NullValueHandling = NullValueHandling.Ignore;
@@ -356,12 +354,14 @@ namespace LacieEngine.Core
 
 		public static void CopyFile(string srcPath, string destPath)
 		{
-			fileOpDir.Copy(srcPath, destPath);
+			using Godot.Directory dir = new Godot.Directory();
+			dir.Copy(srcPath, destPath);
 		}
 
 		public static void DeleteFile(string filePath)
 		{
-			fileOpDir.Remove(filePath);
+			using Godot.Directory dir = new Godot.Directory();
+			dir.Remove(filePath);
 		}
 
 		public static void ClearCache(string resourcePath)
