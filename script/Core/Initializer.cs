@@ -112,7 +112,7 @@ namespace LacieEngine.Core
 			}
 			catch (Exception exception)
 			{
-				Log.Exception(exception, "An error occurred while initializing the game.");
+				Log.Exception(exception, $"CRITICAL INITIALIZATION FAILURE:\n{exception.ToString()}");
 			}
 		}
 
